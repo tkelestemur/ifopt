@@ -118,7 +118,12 @@ SnoptAdapter::Init ()
     }
   }
 
-  setUserFun(&SnoptAdapter::ObjectiveAndConstraintFct);
+//  setUserFun(&SnoptAdapter::ObjectiveAndConstraintFct);
+  // Snopt76 requires initialization
+
+
+  // Snopt76 needs to setup the workspace
+//  this->setWorkspace(neF,n,neA,neG);
 }
 
 void
@@ -141,20 +146,20 @@ SnoptAdapter::ObjectiveAndConstraintFct (int* Status, int* n, double x[],
   }
 
 
-  if ( *needG > 0 ) {
-    int i=0;
-
-    // the jacobian of the first row (cost function)
-    if (nlp_->HasCostTerms()) {
-      Eigen::VectorXd grad = nlp_->EvaluateCostFunctionGradient(x);
-      i = grad.rows();
-      Eigen::Map<VectorXd>(G, i) = grad;
-    }
-
-    // the jacobian of all the constraints
-    nlp_->EvalNonzerosOfJacobian(x, G+i);
-    nlp_->SaveCurrent();
-  }
+//  if ( *needG > 0 ) {
+//    int i=0;
+//
+//    // the jacobian of the first row (cost function)
+//    if (nlp_->HasCostTerms()) {
+//      Eigen::VectorXd grad = nlp_->EvaluateCostFunctionGradient(x);
+//      i = grad.rows();
+//      Eigen::Map<VectorXd>(G, i) = grad;
+//    }
+//
+//    // the jacobian of all the constraints
+//    nlp_->EvalNonzerosOfJacobian(x, G+i);
+//    nlp_->SaveCurrent();
+//  }
 }
 
 void

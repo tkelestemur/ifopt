@@ -29,55 +29,64 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace ifopt {
 
-void
-SnoptSolver::Solve (Problem& ref)
-{
-  SnoptAdapter snopt(ref);
-  snopt.Init();
+    void
+    SnoptSolver::Solve(Problem &ref) {
+        SnoptAdapter snopt(ref);
+        snopt.Init();
 
-  // A complete list of options can be found in the snopt user guide:
-  // https://web.stanford.edu/group/SOL/guides/sndoc7.pdf
-  snopt.setProbName( "snopt" );
-  snopt.setIntParameter( "Major Print level", 1 );
-  snopt.setIntParameter( "Minor Print level", 1 );
-  snopt.setIntParameter( "Derivative option", 1 ); // 1 = snopt will not calculate missing derivatives
-  snopt.setIntParameter( "Verify level ", 3 ); // full check on gradients, will throw error
-  snopt.setIntParameter("Iterations limit", 200000);
-  snopt.setRealParameter( "Major feasibility tolerance",  1.0e-4); // target nonlinear constraint violation
-  snopt.setRealParameter( "Minor feasibility tolerance",  1.0e-4); // for satisfying the QP bounds
-  snopt.setRealParameter( "Major optimality tolerance",   1.0e-2); // target complementarity gap
-
-
-  // error codes as given in the manual.
-  int Cold = 0; // Basis = 1, Warm = 2;
+        // A complete list of options can be found in the snopt user guide:
+        // https://web.stanford.edu/group/SOL/guides/sndoc7.pdf
+        snopt.initialize("", 1); // no print_file and summary ON
+        snopt.setProbName("snopt");
+        snopt.setIntParameter("Major Print level", 1);
+        snopt.setIntParameter("Minor Print level", 1);
+        snopt.setIntParameter("Derivative option", 0); // 1 = snopt will not calculate missing derivatives
+        snopt.setIntParameter( "Verify level ", 2 ); // full check on gradients, will throw error
+        snopt.setIntParameter("Iterations limit", 20000000);
+        snopt.setRealParameter("Major feasibility tolerance", 1.0e-6); // target nonlinear constraint violation
+        snopt.setRealParameter("Minor feasibility tolerance", 1.0e-6); // for satisfying the QP bounds
+        snopt.setRealParameter("Major optimality tolerance",  1.0e-6); // target complementarity gap
 
 
-  // interface changed with snopt version 7.6
-#ifdef SNOPT76
-  int nS = 0; // number of super-basic variables (not relevant for cold start)
-  int nInf;   // nInf : number of constraints outside of the bounds
-  double sInf;// sInf : sum of infeasibilities
+        // error codes as given in the manual.
+        int Cold = 0; // Basis = 1, Warm = 2;
 
-  int INFO  = snopt.solve(Cold, snopt.neF, snopt.n, snopt.ObjAdd,
-                     snopt.ObjRow, &SnoptAdapter::ObjectiveAndConstraintFct,
-                     snopt.iAfun, snopt.jAvar, snopt.A, snopt.neA,
-                     snopt.iGfun, snopt.jGvar, snopt.neG,
-                     snopt.xlow, snopt.xupp, snopt.Flow, snopt.Fupp,
-                     snopt.x, snopt.xstate, snopt.xmul,
-                     snopt.F, snopt.Fstate, snopt.Fmul,
-                     nS, nInf, sInf);
-#else
-  int INFO = snopt.solve(Cold);
-#endif
 
-  int EXIT = INFO - INFO%10; // change least significant digit to zero
+        // interface changed with snopt version 7.6
+//#ifdef SNOPT76
+        int nS = 0; // number of super-basic variables (not relevant for cold start)
+        int nInf;   // nInf : number of constraints outside of the bounds
+        double sInf;// sInf : sum of infeasibilities
 
-  if (EXIT != 0) {
-    std::string msg = "ERROR: Snopt failed to find a solution. EXIT:" + std::to_string(EXIT) + ", INFO:" + std::to_string(INFO) + "\n";
-    throw std::runtime_error(msg);
-  }
+//  int INFO  = snopt.solve(Cold, snopt.neF, snopt.n, snopt.ObjAdd,
+//                     snopt.ObjRow, &SnoptAdapter::ObjectiveAndConstraintFct,
+//                     snopt.iAfun, snopt.jAvar, snopt.A, snopt.neA,
+//                     snopt.iGfun, snopt.jGvar, snopt.neG,
+//                     snopt.xlow, snopt.xupp, snopt.Flow, snopt.Fupp,
+//                     snopt.x, snopt.xstate, snopt.xmul,
+//                     snopt.F, snopt.Fstate, snopt.Fmul,
+//                     nS, nInf, sInf);
 
-  snopt.SetVariables();
-}
+        int INFO = snopt.solve(Cold, snopt.neF, snopt.n, snopt.ObjAdd,
+                               snopt.ObjRow, &SnoptAdapter::ObjectiveAndConstraintFct,
+                               snopt.xlow, snopt.xupp, snopt.Flow, snopt.Fupp,
+                               snopt.x, snopt.xstate, snopt.xmul,
+                               snopt.F, snopt.Fstate, snopt.Fmul,
+                               nS, nInf, sInf);
+//#else
+//#else
+//  int INFO = snopt.solve(Cold);
+//#endif
+
+        int EXIT = INFO - INFO % 10; // change least significant digit to zero
+
+        if (EXIT != 0) {
+            std::string msg = "ERROR: Snopt failed to find a solution. EXIT:" + std::to_string(EXIT) + ", INFO:" +
+                              std::to_string(INFO) + "\n";
+            throw std::runtime_error(msg);
+        }
+
+        snopt.SetVariables();
+    }
 
 } /* namespace ifopt */
